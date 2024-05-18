@@ -1,0 +1,35 @@
+{ "name": "ubborg-make-example-live-isos-pmb",
+  "version": "0.0.1",
+  "description": "Make live ISOs for some example usecases.",
+  "keywords": [],
+
+  "author": "M.K. (https://github.com/mk-pmb)",
+  "homepage": "https://github.com/mk-pmb/ubborg-make-example-live-isos-pmb/#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mk-pmb/ubborg-make-example-live-isos-pmb.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mk-pmb/ubborg-make-example-live-isos-pmb/issues"
+  },
+  "contributors": [],
+
+  "private": true, "license": "ISC",
+
+  "scripts": { "env": "env" },
+  "directories": { "test": "test" },
+  "eslintConfig": { "extends": "nodejs-pmb" },
+
+  "dependencies": {
+    "ubborg-planner-pmb": "^0.0.96",
+    "ubborg-playbookie-pmb": "^0.1.2"
+  },
+  "devDependencies": {
+    "eslint-config-nodejs-pmb": "^0.3.5",
+    "eslint-plugin-json-light-pmb": "^1.0.7",
+    "eslint-plugin-n": "^15.2.4"
+  },
+
+
+  "engines": { "npm": ">=7.0.0", "node": ">=16.0.0" }
+}
