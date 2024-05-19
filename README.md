@@ -50,6 +50,17 @@ Web links
 
 License
 -------
+
 <!--#echo json="package.json" key=".license" -->
 ISC
 <!--/#echo -->
+
+* ⚠ The license is meant for files in this repo. The ISO files created
+  contain third-party content for which other licenses do apply.
+
+
+
+
+
+
+
