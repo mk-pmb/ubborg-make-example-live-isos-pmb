@@ -1,0 +1,15 @@
+%YAML 1.1
+# -*- coding: UTF-8, tab-width: 2 -*-
+---
+
+- gather_facts: false
+  name: 'Proxy settings test: Download NodeSource apt key'
+  hosts: all
+  connection: chroot
+  tasks:
+    - get_url:
+        url: https://deb.nodesource.com/gpgkey/nodesource.gpg.key
+        dest: /etc/apt/trusted.gpg.d/nodesource.asc
+        mode: '0644'
+
+...
