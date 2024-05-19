@@ -14,6 +14,7 @@ CFG[cloud_image_tar_opt]='--xz'
 
 CFG[ubborg_plan]='tmp.plan'
 CFG[playbook]='tmp.playbook.yaml'
+CFG[ansible_proxy]="$(ansible_guess_proxy)"
 
 CFG[iso_output_path]='tmp.livecd.<bread_release_codename>.iso'
 

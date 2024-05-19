@@ -6,6 +6,7 @@
 
 # Auto-generated files:
 /.ghciu
+/ansible.cfg
 /node_modules
 /tmp.*
 
