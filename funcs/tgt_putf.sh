@@ -21,12 +21,12 @@ function tgt_putf () {
     * ) exec <"$SRC" || return $?;;
   esac
   sudo tee -- "$DEST" >/dev/null || return $?
-  stat -c %s -- "$DEST" || return $?
+  sudo stat -c %s -- "$DEST" || return $?
   if [ "$DBGLV" -ge 4 ]; then
-    nl -ba -- "$DEST" || return $?
+    sudo nl -ba -- "$DEST" || return $?
     echo
   fi
-  grep -HnPe '\a' -- "$DEST" >&2 || true
+  sudo grep -HnPe '\a' -- "$DEST" >&2 || true
 
   # Do chmod last because we might give up or own read access:
   [ -z "$CHMOD" ] || sudo chmod --verbose "$CHMOD" -- "$DEST" || return $?
