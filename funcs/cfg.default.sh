@@ -9,6 +9,8 @@ CFG[cloud_image_tar_opt]='--xz'
 CFG[ubborg_plan]='tmp.plan'
 CFG[playbook]='tmp.playbook.yaml'
 
+CFG[ansible_proxy]="$(ansible_guess_proxy)"
+
 
 
 # NB: For "early_file:" options, the initial newline marks verbatim text
