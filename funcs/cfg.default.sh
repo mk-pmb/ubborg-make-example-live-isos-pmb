@@ -11,6 +11,22 @@ CFG[playbook]='tmp.playbook.yaml'
 
 
 
+# NB: For "early_file:" options, the initial newline marks verbatim text
+#     content. (Verbatim except for that it will be unindented.)
+#     Without the initial newline, the value would be interpreted as the
+#     path to a local file to be copied.
+
+CFG[early_file:'etc/apt/apt.conf.d/00proxy']='
+  # Acquire::http::Proxy "http://apt-cacher-ng.local:3142/";
+  '
+CFG[early_file:'etc/apt/apt.conf.d/95never-install-recommends']='
+  APT::Install-Recommends "0";
+  APT::Install-Suggests "0";
+  '
+CFG[early_file:'etc/apt/apt.conf.d/95no-periodic-interference']='
+  APT::Periodic::Enable "0";
+  '
+
 
 
 
