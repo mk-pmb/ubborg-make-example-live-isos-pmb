@@ -23,7 +23,8 @@ function grubcfg_default () {
   SGD='"$config_directory"/sgd/main.cfg'
   >"$GRUB_DIR"/grub.cfg unindent "
     loadfont unicode.pf2
-    menuentry 'Casper Live ISO, built at $(date +'%F %T')' {$CASPER_MENT}
+    menuentry 'Ubuntu Live Session [built $(
+      date --utc +'%F %H:%M UTC')]' {$CASPER_MENT}
 
     if [ -f $SGD ]; then
       menuentry '' { return 0; }
@@ -31,7 +32,7 @@ function grubcfg_default () {
       source $SGD
     fi
 
-    set default=1
+    set default=0
     set timeout=10
     " || return $?
 }
