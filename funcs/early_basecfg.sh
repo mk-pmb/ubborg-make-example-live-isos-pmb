@@ -6,6 +6,17 @@ function early_basecfg () {
   [ -n "$TGT_ROOT" ] || return 4$(echo E: $FUNCNAME: 'Empty chroot path!' >&2)
 
   tgt_putf /etc/hostname $'\n'"${CFG[bread_hostname]}" || return $?
+
+  tgt_putf /etc/casper.conf "
+    export USERNAME='${CFG[bread_username]}'
+    export USERFULLNAME='Live session user'
+    export HOST='${CFG[bread_hostname]}'
+    export BUILD_SYSTEM='Ubuntu'
+
+    # A non-empty FLAVOUR is required to activate the above settings:
+    export FLAVOUR='Ubuntu'
+    " || return $?
+
   early_basecfg__early_files_prefix || return $?
 }
 
