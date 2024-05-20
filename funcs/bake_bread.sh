@@ -5,8 +5,17 @@ function bake_bread () {
   exec </dev/null
   [ -f "${CFG[playbook]}" ] || vdo generate_playbook || return $?
   local TGT_ROOT="${CFG[bread_chroot_path]}"
-  local STAGE="${1:-fresh_loaf}"; shift
-  "$FUNCNAME"__"$STAGE" "$@" || return $?
+  local ISO_ROOT='tmp.isofiles'
+  [ "$#" -ge 1 ] || set -- full
+  set -- "$@" ,
+  local STEP=()
+  while [ "$#" -ge 1 ]; do case "$1" in
+    , )
+      [ -z "${STEP[*]}" ] || "$FUNCNAME"__"${STEP[@]}" || return $?
+      STEP=()
+      shift;;
+    * ) STEP+=( "$1" ); shift;;
+  esac; done
 }
 
 
