@@ -1,6 +1,8 @@
 # -*- coding: utf-8, tab-width: 2 -*-
 
-CFG[bread_hostname]='urdlive'
+CFG[bread_hostname]='livecd'
+CFG[bread_username]='urd'
+
 CFG[bread_chroot_path]='tmp.bread'
 CFG[bread_release_codename]='focal'
 CFG[bread_release_ver_yy]='20'
