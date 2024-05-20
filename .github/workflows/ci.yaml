@@ -1,0 +1,71 @@
+%YAML 1.1
+# ^-- ATTN: [2019-12-31] If you use a later version, Github will fail
+#     with a bogus error message "You have an error in your yaml syntax".
+# -*- coding: UTF-8, tab-width: 4 -*-
+---
+
+on:
+    push:
+        branches:
+            -   '*'
+
+jobs:
+    job_make_isos:
+        runs-on: ubuntu-latest
+        env:
+            HOSTNAME: ci-runner
+        permissions:
+            contents: write
+        strategy:
+            matrix:
+                t:
+                  - { node: 20 }
+
+        steps:
+          - uses: actions/checkout@v4
+          - run: 'date | tee foo-file.txt bar-file.txt'
+
+          - name: 'Publish release'
+            uses: ncipollo/release-action@v1
+            with:
+                allowUpdates: True
+                artifactErrorsFailBuild: True
+                artifacts: '*-file.txt'
+                body: ''
+                makeLatest: False
+                prerelease: True
+                removeArtifacts: True # Remove old files from release.
+                commit: '${{ github.sha }}'
+                tag: 'rolling/auto-ci-release'
+
+#          - name: Use Node.js ${{ matrix.node-version }}
+#            uses: actions/setup-node@v4
+#            with:
+#                node-version: "${{ matrix.t.node }}.x"
+#          - run: npm install .
+
+#          - name: 'Install CI utils'
+#            run: >
+#                sudo -E sh -c 'R=mk-pmb/github-ci-util-2405-pmb; B=master
+#                ; mkdir -p /ghciu && cd /ghciu && wget -q --
+#                "https://github.com/$R/archive/refs/heads/$B.tar.gz"
+#                && tar --strip-components=1 -xvzf "$B.tar.gz"
+#                && ./install_globally.sh'
+
+
+#          - name: 'Acquire recipe modules'
+#            run: >
+#                ghciu repo_unpacker dest='node_modules/#'
+#                src='ghtar:=/#-js@experimental'
+#                ubborg-usecase-rescuedisk-pmb
+
+#          - name: 'Acquire SuperGRUB Disk files'
+#            run: >
+#                ghciu repo_unpacker src=ghtar:#/# dest=tmp.#.repo supergrub
+
+#          - run: ghciu bake_bread
+
+
+
+
+...
