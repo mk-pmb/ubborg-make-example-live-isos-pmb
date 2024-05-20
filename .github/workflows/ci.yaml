@@ -88,12 +88,23 @@ jobs:
                 matrix.t.ubu_ver }}.04_${{ matrix.t.ubu_rls }}.iso'
                 . bake_bread
 
+          - name: 'Collect files for release'
+            run: >
+                mkdir rls ; mv -nvt rls --
+                tmp.debug.*
+                tmp.playbook.flatTodo.json
+                tmp.playbook.yaml
+                *.iso
+                || true
+                ; find rls/ -empty -delete || true
+                ; ls -al rls/ .
+
           - name: 'Publish release'
             uses: ncipollo/release-action@v1
             with:
                 allowUpdates: True
                 artifactErrorsFailBuild: True
-                artifacts: '*.iso'
+                artifacts: 'rls/*'
                 body: ''
                 makeLatest: False
                 prerelease: True
