@@ -24,7 +24,10 @@ Terminology
 Usage
 -----
 
-Just invoke the relevant GitHub Actions workflows.
+Just invoke the relevant GitHub Actions workflow and then download
+the ISO file from [the automatic release][auto-release-page].
+
+
 
 
 
@@ -54,9 +57,11 @@ Web links
 <!--#toc stop="scan" -->
 
 
+  [auto-release-page]: https://github.com/mk-pmb/ubborg-make-example-live-isos-pmb/releases/tag/rolling/auto-ci-release
+
+
 
 &nbsp;
-
 
 License
 -------

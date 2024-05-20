@@ -11,6 +11,12 @@ function prepare_inside_chroot () {
   mount | grep -Fe ' on /dev type ' && return 4$(
     echo E: 'Unexpected /dev mountpoint!' >&2)
 
+  milestone 'Test network connection inside chroot:'
+  wget --no-verbose --output-document=/dev/null --tries=1 --timeout=10 \
+    -- http://archive.ubuntu.com/ubuntu || return $?
+  milestone 'Network seems to work.'
+  echo
+
   easy_divert '
     /etc/apt/sources.list
     /etc/casper.conf
@@ -34,6 +40,7 @@ function prepare_inside_chroot () {
 
 function ze_apt_install () {
   milestone 'apt update, upgrade, install packages:'
+  grep -nPe . -- /etc/apt/apt.conf.d/00proxy
   local PKG=(
     apt-transport-https
     casper
@@ -49,7 +56,7 @@ function ze_apt_install () {
     "
 
   apt-get update || return $?
-  apt-get full-upgrade || return $?
+  apt-get --assume-yes full-upgrade || return $?
   apt-get --assume-yes install "${PKG[@]}" || return $?
   rm -- "$SHUTUP" || return $?
   echo

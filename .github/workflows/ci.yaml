@@ -1,0 +1,100 @@
+%YAML 1.1
+# ^-- ATTN: [2019-12-31] If you use a later version, Github will fail
+#     with a bogus error message "You have an error in your yaml syntax".
+# -*- coding: UTF-8, tab-width: 4 -*-
+---
+
+on:
+    push:
+        branches:
+            -   '*'
+
+jobs:
+    job_make_isos:
+        runs-on: ubuntu-latest
+        env:
+            HOSTNAME: ci-runner
+        permissions:
+            contents: write
+        strategy:
+            matrix:
+                t:
+                  - node: 20
+                    ubu_ver: 20
+                    ubu_rls: 'focal'
+                    usecase: 'rescuedisk-pmb'
+
+        steps:
+          - uses: actions/checkout@v4
+
+          - name: Use Node.js ${{ matrix.t.node }}
+            uses: actions/setup-node@v4
+            with:
+                node-version: "${{ matrix.t.node }}.x"
+          - run: npm install .
+
+          - name: 'Install CI utils'
+            run: >
+                sudo -E sh -c 'R=mk-pmb/github-ci-util-2405-pmb; B=master
+                ; mkdir -p /ghciu && cd /ghciu && wget -q --
+                "https://github.com/$R/archive/refs/heads/$B.tar.gz"
+                && tar --strip-components=1 -xvzf "$B.tar.gz"
+                && ./install_globally.sh'
+
+          - name: 'Acquire recipe modules'
+            run: >
+                ghciu repo_unpacker dest='node_modules/#'
+                src='ghtar:=/#-js@experimental'
+                'ubborg-usecase-${{ matrix.t.usecase }}'
+
+          - name: 'Verify we can build the recipe'
+            run: >
+                ghciu .
+                bread_release_codename='${{ matrix.t.ubu_rls }}'
+                ubborg_plan='cjs:ubborg-usecase-${{ matrix.t.usecase
+                }}/test/example_plans/vanilla'
+                . generate_playbook
+
+          - name: 'Acquire SuperGRUB Disk files'
+            run: >
+                ghciu repo_unpacker src=ghtar:#/# dest=tmp.#.repo supergrub
+
+          - name: 'Acquire the Ubuntu cloud image'
+            run: >
+                wget --quiet --output-document='tmp.cloudimg.tar.xz' --
+                http://cloud-images.ubuntu.com/minimal/releases/${{
+                matrix.t.ubu_rls }}/release/ubuntu-${{ matrix.t.ubu_ver
+                }}.04-minimal-cloudimg-amd64-root.tar.xz
+
+          - name: 'Install apt dependencies'
+            run: >
+                sudo -E sh -c 'apt-get --assume-yes install
+                $(grep -Pe "^\w" -- dependencies.deb-pkg.txt)'
+
+          - name: 'Bake some bread'
+            run: >
+                ghciu .
+                bread_release_codename='${{ matrix.t.ubu_rls }}'
+                ubborg_plan='cjs:ubborg-usecase-${{ matrix.t.usecase
+                }}/test/example_plans/vanilla'
+                cloud_image_tarball='tmp.cloudimg.tar.xz'
+                iso_output_path='ubborg-${{ matrix.t.usecase }}_${{
+                matrix.t.ubu_ver }}.04_${{ matrix.t.ubu_rls }}.iso'
+                . bake_bread
+
+          - name: 'Publish release'
+            uses: ncipollo/release-action@v1
+            with:
+                allowUpdates: True
+                artifactErrorsFailBuild: True
+                artifacts: '*.iso'
+                body: ''
+                makeLatest: False
+                prerelease: True
+                removeArtifacts: True # Remove old files from release.
+                commit: '${{ github.sha }}'
+                tag: 'rolling/auto-ci-release'
+
+
+
+...
