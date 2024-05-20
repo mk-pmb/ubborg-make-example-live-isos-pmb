@@ -20,6 +20,7 @@ function ansible_guess_proxy () {
 
 function generate_ansible_project_config () {
   sed -re 's!^\s+!!' <<<"[defaults]
+    callback_whitelist = profile_tasks
     ${CFG[ansible_proxy]}
     "
 }
@@ -28,7 +29,10 @@ function generate_ansible_project_config () {
 function apply_playbook_to_chroot () {
   generate_ansible_project_config >ansible.cfg || return $?
   sudo -E ansible-playbook --inventory="${CFG[bread_chroot_path]}," \
-    -- "${CFG[playbook]}" || return $?
+    -- "${CFG[playbook]}" | ./util/ansible_unclutter_timings.sed
+  local RVS="${PIPESTATUS[*]}"
+  let RVS="${RVS// /+}"
+  return "$RVS"
 }
 
 
