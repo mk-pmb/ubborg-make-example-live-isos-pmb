@@ -28,6 +28,16 @@ Just invoke the relevant GitHub Actions workflows.
 
 
 
+VirtualBox bugs
+---------------
+
+* [Mouse cursor is invisible in the guest OS?](https://superuser.com/a/694155)
+  While the VM is off, change the mouse type between PS/2 and USB tablet.
+  Or try toggling "Machine &rarr; Disabling Mouse Integration" twice.
+
+
+
+
 
 Web links
 ---------
