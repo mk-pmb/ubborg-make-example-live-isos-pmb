@@ -23,6 +23,8 @@ jobs:
                     ubu_ver: 20
                     ubu_rls: 'focal'
                     usecase: 'rescuedisk-pmb'
+                    # recipe: 'test/example_plans/vanilla'
+                    recipe: 'test/example_plans/justPrimaryUser'
 
         steps:
           - uses: actions/checkout@v4
@@ -76,7 +78,7 @@ jobs:
                 ghciu .
                 bread_release_codename='${{ matrix.t.ubu_rls }}'
                 ubborg_plan='cjs:ubborg-usecase-${{ matrix.t.usecase
-                }}/test/example_plans/vanilla'
+                }}/${{ matrix.t.recipe }}'
                 cloud_image_tarball='tmp.cloudimg.tar.xz'
                 iso_output_path='ubborg-${{ matrix.t.usecase }}_${{
                 matrix.t.ubu_ver }}.04_${{ matrix.t.ubu_rls }}.iso'
