@@ -41,6 +41,12 @@ function prepare_inside_chroot () {
 function ze_apt_install () {
   milestone 'apt update, upgrade, install packages:'
   grep -nPe . -- /etc/apt/apt.conf.d/00proxy
+
+  if [[ " $FLAGS " == *' skip_inner_apt '* ]]; then
+    echo D: $FUNCNAME: 'Skipping as requested via FLAGS.'
+    return 0
+  fi
+
   local PKG=(
     apt-transport-https
     casper

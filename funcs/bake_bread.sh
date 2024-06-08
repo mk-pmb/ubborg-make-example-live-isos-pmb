@@ -64,8 +64,12 @@ function bake_bread__inside_script () {
 
 function bake_bread__prepare_inside () {
   bake_bread__inside_script prepare || return $?
-  ./util/sanity_check_file_types.sh "$TGT_ROOT/boot/" \
-    {vmlinuz,initrd.img}:{L,f} || return $?
+  if [[ " $FLAGS " == *' skip_inner_apt '* ]]; then
+    echo D: $FUNCNAME: 'inner apt was skipped => not sanity-checking.'
+  else
+    ./util/sanity_check_file_types.sh "$TGT_ROOT/boot/" \
+      {vmlinuz,initrd.img}:{L,f} || return $?
+  fi
 
   vdo apply_playbook_to_chroot || return $?
 
@@ -94,6 +98,11 @@ function bake_bread__isoprep () {
 
 
 function bake_bread__isoify () {
+  if [[ " $FLAGS " == *' skip_isoify '* ]]; then
+    echo D: $FUNCNAME: 'Skipping as requested via FLAGS.'
+    return 0
+  fi
+
   vdo bake_bread__pack_squashfs || return $?
   vdo ${CFG[hook_isoify_squashed]} || return $?
   local ISO_IMG="${CFG[iso_output_path]}"

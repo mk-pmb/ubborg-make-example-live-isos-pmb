@@ -14,6 +14,10 @@ jobs:
         runs-on: ubuntu-latest
         env:
             HOSTNAME: ci-runner
+            FLAGS: >
+                skip_inner_apt
+                skip_isoify
+                --
         permissions:
             contents: write
         strategy:
