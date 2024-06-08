@@ -1,116 +1,176 @@
 %YAML 1.1
 # ^-- ATTN: [2019-12-31] If you use a later version, Github will fail
-#     with a bogus error message "You have an error in your yaml syntax".
-# -*- coding: UTF-8, tab-width: 4 -*-
+#   with a bogus error message "You have an error in your yaml syntax".
+# -*- coding: UTF-8, tab-width: 2 -*-
 ---
 
 on:
-    push:
-        branches:
-            -   '*'
+  push:
+    branches:
+      -   '*'
+
+env:
+  HOSTNAME: ci-runner
 
 jobs:
-    job_make_isos:
-        runs-on: ubuntu-latest
-        env:
-            HOSTNAME: ci-runner
-            FLAGS: >
-                skip_inner_apt
-                skip_isoify
-                --
-        permissions:
-            contents: write
-        strategy:
-            matrix:
-                t:
-                  - node: 20
-                    ubu_ver: 20
-                    ubu_rls: 'focal'
-                    usecase: 'rescuedisk-pmb'
-                    # recipe: 'test/example_plans/vanilla'
-                    recipe: 'test/example_plans/justPrimaryUser'
 
-        steps:
-          - uses: actions/checkout@v4
+  job_prepare_basics:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: mk-pmb/github-ci-util-2405-pmb@experimental
+      - run: npm install .
+      - name: 'Generate build matrix'
+        id: matrix
+        run: >
+          true echo matrix="$MATRIX" >>"$GITHUB_OUTPUT"
+    outputs:
+      matrix: ${{ env.MATRIX }}
+    env:
+      MATRIX: >
+        [{ "ubuntu_version": 20, "ubuntu_release": "focal",
+          "ubborg_usecase": "rescuedisk-pmb",
+          "ubborg_recipe": "test/example_plans/justPrimaryUser"
+        }]
+      # "ubborg_usecase": "test/example_plans/vanilla"
 
-          - name: Use Node.js ${{ matrix.t.node }}
-            uses: actions/setup-node@v4
-            with:
-                node-version: "${{ matrix.t.node }}.x"
-          - run: npm install .
 
-          - name: 'Install CI utils'
-            run: >
-                sudo -E sh -c 'R=mk-pmb/github-ci-util-2405-pmb; B=master
-                ; mkdir -p /ghciu && cd /ghciu && wget -q --
-                "https://github.com/$R/archive/refs/heads/$B.tar.gz"
-                && tar --strip-components=1 -xvzf "$B.tar.gz"
-                && ./install_globally.sh'
 
-          - name: 'Acquire recipe modules'
-            run: >
-                ghciu repo_unpacker dest='node_modules/#'
-                src='ghtar:=/#-js@experimental'
-                'ubborg-usecase-${{ matrix.t.usecase }}'
+  job_download_global_blobs:
+    runs-on: ubuntu-latest
+    needs: 'job_prepare_basics'
+    steps:
+      - name: 'Setup download cache for matrix-independent large blobs'
+        uses: actions/cache@v4
+        with:
+          path: "tmp.cache.common/"
+          key:  "blobs:global"
 
-          - name: 'Verify we can build the recipe'
-            run: >
-                ghciu .
-                bread_release_codename='${{ matrix.t.ubu_rls }}'
-                ubborg_plan='cjs:ubborg-usecase-${{ matrix.t.usecase
-                }}/test/example_plans/vanilla'
-                . generate_playbook
+      - name: 'Download matrix-independent large blobs'
+        run: >
+          mkdir --parents -- tmp.cache.common/
+          && echo dummy >tmp.cache.common/dummy.txt
 
-          - name: 'Acquire SuperGRUB Disk files'
-            run: >
-                ghciu repo_unpacker src=ghtar:#/# dest=tmp.#.repo supergrub
 
-          - name: 'Acquire the Ubuntu cloud image'
-            run: >
-                wget --quiet --output-document='tmp.cloudimg.tar.xz' --
-                http://cloud-images.ubuntu.com/minimal/releases/${{
-                matrix.t.ubu_rls }}/release/ubuntu-${{ matrix.t.ubu_ver
-                }}.04-minimal-cloudimg-amd64-root.tar.xz
 
-          - name: 'Install apt dependencies'
-            run: >
-                sudo -E sh -c 'apt-get --assume-yes install
-                $(grep -Pe "^\w" -- dependencies.deb-pkg.txt)'
+  job_download_matrix_blobs:
+    runs-on: ubuntu-latest
+    needs:
+      - 'job_prepare_basics'
+      - 'job_download_global_blobs'
+    strategy:
+      matrix:
+        includes: "${{ fromJSON(needs.job_prepare_basics.outputs.matrix) }}"
+    env:
+      UBU_VER: "${{ matrix.ubuntu_version }}"
+      UBU_RLS: "${{ matrix.ubuntu_release }}"
+      CACHE_DIR: "tmp.cache.${{ matrix.ubuntu_release }}"
+    steps:
+      - name: "Setup download cache for large blobs for ${{ env.UBU_RLS }}"
+        uses: actions/cache@v4
+        with:
+          path: "${{ env.CACHE_DIR }}"
+          key:  "blobs:rls:${{ env.UBU_RLS }}"
 
-          - name: 'Bake some bread'
-            run: >
-                ghciu .
-                bread_release_codename='${{ matrix.t.ubu_rls }}'
-                ubborg_plan='cjs:ubborg-usecase-${{ matrix.t.usecase
-                }}/${{ matrix.t.recipe }}'
-                cloud_image_tarball='tmp.cloudimg.tar.xz'
-                iso_output_path='ubborg-${{ matrix.t.usecase }}_${{
-                matrix.t.ubu_ver }}.04_${{ matrix.t.ubu_rls }}.iso'
-                . bake_bread
+      - name: "Download large blobs for ${{ env.UBU_RLS }}"
+        run: >
+          mkdir --parents -- "$CACHE_DIR"
+          && echo dummy >"$CACHE_DIR"/dummy.txt
+          && echo tmp.cache.${{ env.UBU_RLS }}/web/cloudimg.tar.xz
+            '<' http://cloud-images.ubuntu.com/
+            minimal/releases/${{ env.UBU_RLS }}/
+            release/ubuntu-${{ env.UBU_VER }}.04
+            -minimal-cloudimg-amd64-root.tar.xz '>'
 
-          - name: 'Collect files for release'
-            run: >
-                mkdir rls ; mv -nvt rls --
-                tmp.debug.*
-                tmp.playbook.flatTodo.json
-                tmp.playbook.yaml
-                *.iso
-                || true
-                ; find rls/ -empty -delete || true
-                ; ls -al rls/ .
 
-          - name: 'Publish release'
-            uses: ncipollo/release-action@v1
-            with:
-                allowUpdates: True
-                artifactErrorsFailBuild: True
-                artifacts: 'rls/*'
-                body: ''
-                makeLatest: False
-                prerelease: True
-                removeArtifacts: True # Remove old files from release.
-                commit: '${{ github.sha }}'
-                tag: 'rolling/auto-ci-release'
+
+  job_make_isos:
+    runs-on: ubuntu-latest
+    needs: 'job_download_matrix_blobs'
+    permissions:
+      contents: write
+    strategy:
+      matrix:
+        includes: "${{ fromJSON(needs.job_prepare_basics.outputs.matrix) }}"
+    env:
+      UBU_VER: "${{ matrix.ubuntu_version }}"
+      UBU_RLS: "${{ matrix.ubuntu_release }}"
+
+    steps:
+
+      - run: |
+          env | grep -Pie '\b(wget|ubuntu|ubu_)' | sort;
+          env | grep -oPe '^\w+=' | sort | fmt;
+          exit 4
+
+
+      - name: 'Acquire recipe modules'
+        run: >
+          ghciu repo_unpacker dest='node_modules/#'
+          src='ghtar:=/#-js@experimental'
+          'ubborg-usecase-${{ matrix.t.usecase }}'
+
+      - name: 'Verify we can build the recipe'
+        run: >
+          ghciu .
+          bread_release_codename='${{ matrix.t.ubu_rls }}'
+          ubborg_plan='cjs:ubborg-usecase-${{ matrix.t.usecase
+          }}/test/example_plans/vanilla'
+          . generate_playbook
+
+      - name: 'Acquire SuperGRUB Disk files'
+        run: >
+          ghciu repo_unpacker src=ghtar:#/# dest=tmp.#.repo supergrub
+
+      - name: 'Install apt dependencies'
+        run: >
+          sudo -E sh -c 'apt-get --assume-yes install
+          $(grep -Pe "^\w" -- dependencies.deb-pkg.txt)'
+
+      - name: 'Bake some bread'
+        run: >
+          OVEN_FLAGS='
+          skip_inner_apt
+          skip_isoprep
+          skip_isoify
+          '
+          ghciu .
+          bread_release_codename='${{ matrix.t.ubu_rls }}'
+          ubborg_plan='cjs:ubborg-usecase-${{ matrix.t.usecase
+          }}/${{ matrix.t.recipe }}'
+          cloud_image_tarball='${{ steps.downloads.outputs.cimg }}'
+          iso_output_path='ubborg-${{ matrix.t.usecase }}_${{
+          matrix.t.ubu_ver }}.04_${{ matrix.t.ubu_rls }}.iso'
+          . bake_bread
+
+      - name: 'Collect files for release'
+        run: >
+          mkdir rls ; mv -nvt rls --
+          tmp.debug.*
+          tmp.playbook.flatTodo.json
+          tmp.playbook.yaml
+          *.iso
+          || true
+          ; find rls/ -empty -delete || true
+          ; ls -al rls/ .
+
+      - name: 'Publish release'
+        uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: True
+          artifactErrorsFailBuild: True
+          artifacts: 'rls/*'
+          body: ''
+          makeLatest: False
+          prerelease: True
+          removeArtifacts: True # Remove old files from release.
+          commit: '${{ github.sha }}'
+          tag: 'rolling/auto-ci-release'
+
+
+
+
+
 
 
 

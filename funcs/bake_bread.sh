@@ -39,10 +39,10 @@ function bake_bread__purge () {
 function bake_bread__full () {
   [ -f "${CFG[playbook]}" ] || vdo generate_playbook || return $?
 
-  local AC='tmp.cache/apt'
-  mkdir --parents -- "$AC" || return $?
-  AC="B:var/cache/apt/archives:$AC"
-  vdo ./util/chrootmgr.sh "$TGT_ROOT" remount T: "$AC" || return $?
+  local APT_CACHE='tmp.cache.${CFG[bread_release_codename]}/apt'
+  mkdir --parents -- "$APT_CACHE" || return $?
+  APT_CACHE="B:var/cache/apt/archives:$APT_CACHE"
+  vdo ./util/chrootmgr.sh "$TGT_ROOT" remount T: "$APT_CACHE" || return $?
 
   vdo unpack_cloud_image_tarball || return $?
   vdo early_basecfg || return $?
@@ -64,7 +64,7 @@ function bake_bread__inside_script () {
 
 function bake_bread__prepare_inside () {
   bake_bread__inside_script prepare || return $?
-  if [[ " $FLAGS " == *' skip_inner_apt '* ]]; then
+  if [[ " $OVEN_FLAGS " == *' skip_inner_apt '* ]]; then
     echo D: $FUNCNAME: 'inner apt was skipped => not sanity-checking.'
   else
     ./util/sanity_check_file_types.sh "$TGT_ROOT/boot/" \
@@ -80,6 +80,12 @@ function bake_bread__prepare_inside () {
 function bake_bread__isoprep () {
   vdo ./util/chrootmgr.sh "$TGT_ROOT" close || return $?
   [ -n "$ISO_ROOT" ] || return 4$(echo E: 'Empty bread_isotmp_path!' >&2)
+
+  if [[ " $OVEN_FLAGS " == *' skip_isoprep '* ]]; then
+    echo D: $FUNCNAME: 'Skipping as requested via OVEN_FLAGS.'
+    return 0
+  fi
+
   mkdir --parents -- "$ISO_ROOT"/casper || return $?
   cp --recursive --target-directory="$ISO_ROOT"/casper \
     "$TGT_ROOT"/boot/{initrd,vmlinuz}* || return $?
@@ -98,8 +104,8 @@ function bake_bread__isoprep () {
 
 
 function bake_bread__isoify () {
-  if [[ " $FLAGS " == *' skip_isoify '* ]]; then
-    echo D: $FUNCNAME: 'Skipping as requested via FLAGS.'
+  if [[ " $OVEN_FLAGS " == *' skip_isoify '* ]]; then
+    echo D: $FUNCNAME: 'Skipping as requested via OVEN_FLAGS.'
     return 0
   fi
 
