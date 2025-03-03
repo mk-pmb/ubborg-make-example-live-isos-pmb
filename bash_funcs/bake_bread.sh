@@ -3,6 +3,7 @@
 
 function bake_bread () {
   exec </dev/null
+  export DEBIAN_FRONTEND=noninteractive
   local TGT_ROOT="${CFG[bread_chroot_path]}"
   local ISO_ROOT='tmp.isofiles'
   [ "$#" -ge 1 ] || set -- full
@@ -44,7 +45,7 @@ function bake_bread__full () {
   APT_CACHE="B:var/cache/apt/archives:$APT_CACHE"
   vdo ./util/chrootmgr.sh "$TGT_ROOT" remount T: "$APT_CACHE" || return $?
 
-  vdo unpack_cloud_image_tarball || return $?
+  vdo cloud_image_tarball unpack || return $?
   vdo early_basecfg || return $?
   bake_bread__prepare_inside || return $?
   vdo ./util/chrootmgr.sh "$TGT_ROOT" close || return $?
@@ -64,8 +65,12 @@ function bake_bread__inside_script () {
 
 function bake_bread__prepare_inside () {
   bake_bread__inside_script prepare || return $?
-  ./util/sanity_check_file_types.sh "$TGT_ROOT/boot/" \
-    {vmlinuz,initrd.img}:{L,f} || return $?
+  if [[ " $OVEN_FLAGS " == *' skip_inner_apt '* ]]; then
+    echo D: $FUNCNAME: 'inner apt was skipped => not sanity-checking.'
+  else
+    ./util/sanity_check_file_types.sh "$TGT_ROOT/boot/" \
+      {vmlinuz,initrd.img}:{L,f} || return $?
+  fi
 
   vdo apply_playbook_to_chroot || return $?
 
@@ -76,6 +81,12 @@ function bake_bread__prepare_inside () {
 function bake_bread__isoprep () {
   vdo ./util/chrootmgr.sh "$TGT_ROOT" close || return $?
   [ -n "$ISO_ROOT" ] || return 4$(echo E: 'Empty bread_isotmp_path!' >&2)
+
+  if [[ " $OVEN_FLAGS " == *' skip_isoprep '* ]]; then
+    echo D: $FUNCNAME: 'Skipping as requested via OVEN_FLAGS.'
+    return 0
+  fi
+
   mkdir --parents -- "$ISO_ROOT"/casper || return $?
   cp --recursive --target-directory="$ISO_ROOT"/casper \
     "$TGT_ROOT"/boot/{initrd,vmlinuz}* || return $?
@@ -94,9 +105,16 @@ function bake_bread__isoprep () {
 
 
 function bake_bread__isoify () {
+  if [[ " $OVEN_FLAGS " == *' skip_isoify '* ]]; then
+    echo D: $FUNCNAME: 'Skipping as requested via OVEN_FLAGS.'
+    return 0
+  fi
+
   vdo bake_bread__pack_squashfs || return $?
   vdo ${CFG[hook_isoify_squashed]} || return $?
-  local ISO_IMG="${CFG[iso_output_path]}"
+  local ISO_IMG="$(resolve_cfg_path_vars '<iso_output_path>')"
+
+  mkdir --parents -- "$(dirname -- "$ISO_IMG")"
   [ ! -f "$ISO_IMG" ] || rm -- "$ISO_IMG" || return $?
 
   # NB: No '--' before $ISO_ROOT in next command!
@@ -142,6 +160,7 @@ function bake_bread__pack_squashfs () {
 
 
 function bake_bread__present_result_files () {
+  echo D: "These are your freshly baked ISO files:"
   sudo chown --reference . -- "$@" || return $?
   du --human-readable -- "$@" || return $?
 }
