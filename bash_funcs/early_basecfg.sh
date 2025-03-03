@@ -6,6 +6,7 @@ function early_basecfg () {
   [ -n "$TGT_ROOT" ] || return 4$(echo E: $FUNCNAME: 'Empty chroot path!' >&2)
 
   tgt_putf /etc/hostname $'\n'"${CFG[bread_hostname]}" || return $?
+  tgt_putf /etc/resolv.conf <(grep -Pe '^\w' -- /etc/resolv.conf) || return $?
 
   tgt_putf /etc/casper.conf "
     export USERNAME='${CFG[bread_username]}'

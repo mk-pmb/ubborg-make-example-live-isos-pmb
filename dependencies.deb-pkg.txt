@@ -1,0 +1,12 @@
+# -*- coding: utf-8, tab-width: 2 -*-
+
+# binutils
+# debootstrap
+
+ansible
+grub-efi-amd64-bin
+grub-pc-bin
+memtest86+
+mtools
+squashfs-tools
+xorriso
