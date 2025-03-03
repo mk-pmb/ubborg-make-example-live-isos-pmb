@@ -19,7 +19,7 @@ CFG[playbook]='tmp.playbook.yaml'
 CFG[ansible_proxy]="$(ansible_guess_proxy)"
 
 CFG[hook_isoprep_grubcfg]='grubcfg_default'
-CFG[iso_output_path]='tmp.livecd.<bread_release_codename>.iso'
+CFG[iso_output_path]='tmp.boot-isos/livecd.<bread_release_codename>.iso'
 
 
 

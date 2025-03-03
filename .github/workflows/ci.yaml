@@ -107,7 +107,7 @@ jobs:
           tmp.debug.*
           tmp.playbook.flatTodo.json
           tmp.playbook.yaml
-          *.iso
+          [a-z]*/*.iso
           || true
           ; find rls/ -empty -delete || true
           ; ls -al rls/ .
