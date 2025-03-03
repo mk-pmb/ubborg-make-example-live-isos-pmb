@@ -28,11 +28,33 @@ function generate_ansible_project_config () {
 
 function apply_playbook_to_chroot () {
   generate_ansible_project_config >ansible.cfg || return $?
-  sudo -E ansible-playbook --inventory="${CFG[bread_chroot_path]}," \
-    -- "${CFG[playbook]}" | ./util/ansible_unclutter_timings.sed
+  local LOG_TPL='tmp.debug.ansible.%.txt'
+  local LOG_ALL="${LOG_TPL//%/all}"
+  ( echo LOG_CANARY arrives
+    sudo -E ansible-playbook --inventory="${CFG[bread_chroot_path]}," \
+      -- "${CFG[playbook]}"
+    echo LOG_CANARY survived
+  ) |& ./util/ansible_unclutter_timings.sed | tee -- "$LOG_ALL"
   local RVS="${PIPESTATUS[*]}"
-  let RVS="${RVS// /+}"
-  return "$RVS"
+  [ "$RVS" == '0 0 0' ] || return 4$(
+    echo E: $FUNCNAME: "Main pipe failed: rv=[$RVS]" >&2)
+  local LOG_WARN="${LOG_TPL//%/warn}"
+  grep -C 3 -vPe '^TASK |^ |^\}$|^$' -- "$LOG_ALL" >"$LOG_WARN"
+
+  local CANARY="$(grep -nPe '^' -m 5 -- "$LOG_WARN")"
+  case "$CANARY" in
+    $'1:LOG_CANARY arrives\n2:LOG_CANARY survived' )
+      rm -- "$LOG_WARN"
+      return 0;;
+    $'1:LOG_CANARY arrives\n2:'* )
+      echo W: $FUNCNAME: 'Found warnings in logfile.'
+      wc --lines -- "$LOG_ALL" "$LOG_WARN"
+      ;;
+    * )
+      sed -re 's~^~| ~' <<<"$CANARY"
+      echo E: $FUNCNAME: 'Canary malfunction.' >&2
+      return 8;;
+  esac
 }
 
 

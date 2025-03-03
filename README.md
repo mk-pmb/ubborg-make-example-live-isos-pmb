@@ -24,7 +24,20 @@ Terminology
 Usage
 -----
 
-Just invoke the relevant GitHub Actions workflows.
+### On GitHub (recommended)
+
+Just invoke the relevant GitHub Actions workflow and then download
+the ISO file from [the automatic release][auto-release-page].
+
+
+### Local development
+
+* Clone the repo.
+* Run: `ghciu bake_bread`
+* If there are errors about missing files, search `github-ci.yaml`
+  for preparation steps that you may have to do initially.
+* To properly dispose of a failed bread,
+  `./util/chrootmgr.sh tmp.bread/ discard`
 
 
 
@@ -42,7 +55,7 @@ VirtualBox bugs
 Web links
 ---------
 
-* [Ubuntu minimal](https://wiki.ubuntu.com/Minimal):
+* [Ubuntu minimal](https://wiki.ubuntu.com/Minimal) cloud images:
   [noble](http://cloud-images.ubuntu.com/minimal/releases/noble/release/)
 * [Ubuntu Wiki: Live CD Customization From Scratch
   ](https://help.ubuntu.com/community/LiveCDCustomizationFromScratch)
@@ -54,9 +67,11 @@ Web links
 <!--#toc stop="scan" -->
 
 
+  [auto-release-page]: https://github.com/mk-pmb/ubborg-make-example-live-isos-pmb/releases/tag/rolling/auto-ci-release
+
+
 
 &nbsp;
-
 
 License
 -------

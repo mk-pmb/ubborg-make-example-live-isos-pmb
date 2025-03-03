@@ -1,0 +1,135 @@
+%YAML 1.1
+# ^-- ATTN: [2019-12-31] If you use a later version, Github will fail
+#   with a bogus error message "You have an error in your yaml syntax".
+# -*- coding: UTF-8, tab-width: 2 -*-
+---
+
+on:
+  push:
+    branches:
+      -   '*'
+
+env:
+  HOSTNAME: ci-runner
+
+jobs:
+
+  job_prepare_matrix:
+    runs-on: ubuntu-latest
+    steps:
+      ##_DEFINE_SECTION_## basic_install_steps
+      - uses: actions/checkout@v4
+      - uses: mk-pmb/github-ci-util-2405-pmb/act/install@experimental
+      - run: npm install .
+      ##_END_SECTION_##
+
+      - name: 'Generate build matrix'
+        id: mxgen
+        run: 'ghciu generate_build_matrix'
+
+    outputs:
+      mxtasks: "${{ steps.mxgen.outputs.mxtasks}}"
+
+
+  job_make_isos:
+    runs-on: ubuntu-latest
+    needs:
+      - 'job_prepare_matrix'
+
+      # I tried to make a single shared download step for the cloud image
+      # for each Ubuntu release we use, but GitHub seems to not have any
+      # good way to reuse the downloaded file in another job.
+      # I could use caches, but assuming good Ubuntu download servers,
+      # there probably won't be much gain.
+
+    permissions:
+      contents: write
+    strategy:
+      matrix:
+        t: "${{ fromJSON(needs.job_prepare_matrix.outputs.mxtasks) }}"
+    env:
+      CLOUDIMG_TXZ: 'tmp.cloudimg.tar.xz'
+      UBB_RECIPE: "${{ matrix.t.ubborg_recipe }}"
+      UBB_USECASE: "${{ matrix.t.ubborg_usecase }}"
+      UBU_RLS: "${{ matrix.t.ubuntu_release }}"
+      UBU_VER: "${{ matrix.t.ubuntu_version }}"
+
+    steps:
+      ##_REPEAT_SECTION_## basic_install_steps
+      - uses: actions/checkout@v4
+      - uses: mk-pmb/github-ci-util-2405-pmb/act/install@experimental
+      - run: npm install .
+      ##_END_SECTION_##
+
+      - name: 'Acquire recipe modules'
+        run: >
+          ghciu repo_unpacker dest='node_modules/#'
+          src='ghtar:=/#-js@experimental'
+          "ubborg-usecase-$UBB_USECASE"
+
+      - name: 'Verify we can build the recipe'
+        run: >
+          ghciu .
+          bread_release_codename="$UBB_RECIPE"
+          ubborg_plan="cjs:ubborg-usecase-$UBB_USECASE/$UBB_RECIPE"
+          . generate_playbook
+
+      - name: "Download the cloud image for ${{ env.UBU_RLS }}"
+        run: >
+          ghciu ./util/download_ubuntu_lts_cloudimg.sh -O "$CLOUDIMG_TXZ"
+
+      - name: 'Acquire SuperGRUB Disk files'
+        run: >
+          ghciu repo_unpacker src=ghtar:#/# dest=tmp.#.repo supergrub
+
+      - name: 'Install apt dependencies'
+        run: >
+          sudo -E sh -c 'apt-get --assume-yes install
+          $(grep -Pe "^\w" -- dependencies.deb-pkg.txt)'
+
+      - name: 'Bake some bread'
+        run: >
+          ghciu .
+          bread_release_codename="$UBU_RLS"
+          ubborg_plan="cjs:ubborg-usecase-$UBB_USECASE/$UBB_RECIPE"
+          cloud_image_tarball="$CLOUDIMG_TXZ"
+          iso_output_path="ubborg-${UBB_USECASE}_${UBU_VER}.04_${UBU_RLS}.iso"
+          . bake_bread
+        env:
+          OVEN_FLAGS:
+            # skip_inner_apt
+            # skip_isoify
+            # skip_isoprep
+
+      - name: 'Collect files for release'
+        run: >
+          mkdir rls ; mv -nvt rls --
+          tmp.debug.*
+          tmp.playbook.flatTodo.json
+          tmp.playbook.yaml
+          *.iso
+          || true
+          ; find rls/ -empty -delete || true
+          ; ls -al rls/ .
+
+      - name: 'Publish release'
+        uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: True
+          artifactErrorsFailBuild: True
+          artifacts: 'rls/*'
+          body: ''
+          makeLatest: False
+          prerelease: True
+          removeArtifacts: True # Remove old files from release.
+          commit: '${{ github.sha }}'
+          tag: 'rolling/auto-ci-release'
+
+
+
+
+
+
+
+
+...
