@@ -6,6 +6,7 @@ CFG[bread_username]='urd'
 CFG[bread_chroot_path]='tmp.bread'
 CFG[bread_release_codename]='focal'
 CFG[bread_release_ver_yy]='20'
+CFG[bread_locale]='en_US.UTF-8'
 
 CFG[cloud_image_url]='https://cloud-images.ubuntu.com/minimal/releases/'$(
   )'<bread_release_codename>/release/ubuntu-<bread_release_ver_yy>.04'$(

@@ -30,7 +30,7 @@ function cloud_image_tarball () {
 
   echo
   local TGT_ROOT="${CFG[bread_chroot_path]:-/proc/ERROR/TGT_ROOT}"
-  mkdir --parents -- "$TGT_ROOT" || return $?
+  mkdir --parents -- "$TGT_ROOT/etc" || return $?
   vdo sudo find "$TGT_ROOT"/etc/ -type f -name '*.dpkg-orig' \
     -delete || return $?
 

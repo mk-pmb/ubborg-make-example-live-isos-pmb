@@ -49,7 +49,16 @@ function ze_apt_install () {
     return 0
   fi
 
-  local PKG=(
+  echo D: 'Update apt package lists:'
+  apt-get update || return $?
+
+  # First we install locales, to get rid of lots of dpkg warnings
+  # in the next packages we install.
+  echo D: 'Install locales:'
+  apt-get --assume-yes install locales || return $?
+
+  echo D: 'Install basic packages:'
+  local BASE_PKG=(
     apt-transport-https
     casper
     linux-image-lowlatency
@@ -63,9 +72,8 @@ function ze_apt_install () {
     # ^- Always install maintainer's version files (discard local changes)
     "
 
-  apt-get update || return $?
   apt-get --assume-yes full-upgrade || return $?
-  apt-get --assume-yes install "${PKG[@]}" || return $?
+  apt-get --assume-yes install "${BASE_PKG[@]}" || return $?
   rm -- "$SHUTUP" || return $?
   echo
 }
