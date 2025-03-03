@@ -5,11 +5,17 @@ function tgt_putf () {
   [ -n "$TGT_ROOT" ] || return 4$(echo E: $FUNCNAME: 'Empty chroot path!' >&2)
   local CHMOD=
   if [ "$1" == +chmod ]; then shift; CHMOD="$1"; shift; fi
-  local DEST="$TGT_ROOT/${1#/}"; shift
+  local DEST="${1#/}"; shift
   local SRC="$1"; shift
   case "$DEST" in
     */ ) DEST+="$(basename -- "$SRC")";;
   esac
+
+  case "$SRC" in
+    = ) exec <"/$DEST" || return $?; SRC=-;;
+  esac
+
+  DEST="$TGT_ROOT/$DEST"
   sudo mkdir --parents -- "$(dirname -- "$DEST")"
   sudo rm -- "$DEST" &>/dev/null # Avoid symlinks etc.
   echo -n "Writing $DEST: "
