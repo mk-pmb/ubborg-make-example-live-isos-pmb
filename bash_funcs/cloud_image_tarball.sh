@@ -28,8 +28,12 @@ function cloud_image_tarball () {
     unpack ) ;;
   esac
 
+  echo
   local TGT_ROOT="${CFG[bread_chroot_path]:-/proc/ERROR/TGT_ROOT}"
   mkdir --parents -- "$TGT_ROOT" || return $?
+  vdo sudo find "$TGT_ROOT"/etc/ -type f -name '*.dpkg-orig' \
+    -delete || return $?
+
   log_rtc_stopwatch 0 ': unpack:'
   START=$SECONDS
   local UNP=(
