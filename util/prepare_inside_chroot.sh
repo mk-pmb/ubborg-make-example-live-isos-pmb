@@ -21,7 +21,9 @@ function prepare_inside_chroot () {
     /etc/apt/sources.list
     /etc/casper.conf
     /etc/fstab
-    ' || return $?
+    ' || return $?$(echo E: $FUNCNAME: >&2 'easy_divert failed!' \
+    'This is likely due to remains from a previous run.' \
+    'Try discarding the old bread!')
 
   sed -rf <(echo '
     s~^(LABEL=)cloudimg-rootfs(\s+/\s)~\1livecdroot\2~
