@@ -93,7 +93,7 @@ jobs:
           bread_release_codename="$UBU_RLS"
           ubborg_plan="cjs:ubborg-usecase-$UBB_USECASE/$UBB_RECIPE"
           cloud_image_tarball="$CLOUDIMG_TXZ"
-          iso_output_path="ubborg-${UBB_USECASE}_${UBU_VER}.04_${UBU_RLS}.iso"
+          iso_output_path="tmp.boot-isos/ubborg-${UBB_USECASE}_${UBU_VER}.04_${UBU_RLS}.iso"
           . bake_bread
         env:
           OVEN_FLAGS:
@@ -107,7 +107,7 @@ jobs:
           tmp.debug.*
           tmp.playbook.flatTodo.json
           tmp.playbook.yaml
-          *.iso
+          tmp.*/*.iso
           || true
           ; find rls/ -empty -delete || true
           ; ls -al rls/ .
