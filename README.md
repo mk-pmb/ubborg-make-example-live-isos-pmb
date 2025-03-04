@@ -38,6 +38,7 @@ the ISO file from [the automatic release][auto-release-page].
   for preparation steps that you may have to do initially.
 * To properly dispose of a failed bread,
   `./util/chrootmgr.sh tmp.bread/ discard`
+* To try it in QEMU: `ghciu qemu_boot`
 
 
 
