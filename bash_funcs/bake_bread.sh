@@ -40,6 +40,12 @@ function bake_bread__purge () {
 function bake_bread__full () {
   [ -f "${CFG[playbook]}" ] || vdo generate_playbook || return $?
 
+  local ISO_IMG="$(resolve_cfg_path_vars '<iso_output_path>')"
+  local ISO_DESTDIR="$(dirname -- "$ISO_IMG")"
+  mkdir --parents -- "$ISO_DESTDIR" || true
+  [ -d "$ISO_DESTDIR" ] || return 4$(
+    echo E: "ISO_DESTDIR is not a directory: $ISO_DESTDIR" >&2)
+
   local APT_CACHE="tmp.cache/${CFG[bread_release_codename]}/apt"
   mkdir --parents -- "$APT_CACHE" || return $?
   APT_CACHE="B:var/cache/apt/archives:$APT_CACHE"
@@ -112,9 +118,8 @@ function bake_bread__isoify () {
 
   vdo bake_bread__pack_squashfs || return $?
   vdo ${CFG[hook_isoify_squashed]} || return $?
-  local ISO_IMG="$(resolve_cfg_path_vars '<iso_output_path>')"
-
-  mkdir --parents -- "$(dirname -- "$ISO_IMG")"
+  [ -d "$ISO_DESTDIR" ] || return 4$(echo E: $FUNCNAME: >&2 \
+    'Previous step(s) should have made ISO_DESTDIR a directory!')
   [ ! -f "$ISO_IMG" ] || rm -- "$ISO_IMG" || return $?
 
   # NB: No '--' before $ISO_ROOT in next command!
