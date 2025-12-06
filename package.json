@@ -21,13 +21,13 @@
   "eslintConfig": { "extends": "nodejs-pmb" },
 
   "dependencies": {
-    "ubborg-planner-pmb": "^0.0.96",
-    "ubborg-playbookie-pmb": "^0.1.3"
+    "ubborg-planner-pmb": "^0.0.103",
+    "ubborg-playbookie-pmb": "^0.1.4"
   },
   "devDependencies": {
-    "eslint-config-nodejs-pmb": "^0.3.5",
+    "eslint-config-nodejs-pmb": "^0.3.13",
     "eslint-plugin-json-light-pmb": "^1.0.7",
-    "eslint-plugin-n": "^15.2.4"
+    "eslint-plugin-n": "^17.16.2"
   },
 
 
