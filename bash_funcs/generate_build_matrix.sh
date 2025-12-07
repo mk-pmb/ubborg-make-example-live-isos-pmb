@@ -12,11 +12,6 @@ function generate_build_matrix () {
         '
     )
 
-  # local RLS_TAG="rolling/${GITHUB_REF#*-}"
-  local RLS_TAG="rolling/auto-ci-release"
-  local REPO_URL="https://github.com/$GITHUB_REPOSITORY"
-  local RLS_SUBURL="/releases/tag/$RLS_TAG"
-
   local ESTIMATED_MAX_BUILD_TIME_SECONDS_OVERHEAD=$(( 1 * 60 ))
   local ESTIMATED_MAX_BUILD_TIME_SECONDS_PER_RECIPE=$(( 5 * 60 ))
   local DURA=$(( ESTIMATED_MAX_BUILD_TIME_SECONDS_OVERHEAD ))
@@ -49,7 +44,6 @@ function generate_build_matrix () {
 
   ( echo "Building $N_TASKS variation(s)." \
       "This will probably finish before $ETA_HR."
-    echo "The release page will be [\`…$RLS_SUBURL\`]($REPO_URL$RLS_SUBURL)."
     echo
   ) >>"$GITHUB_STEP_SUMMARY"
   ghciu_ensure_stepsumm_size_limit || return $?

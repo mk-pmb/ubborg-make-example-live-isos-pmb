@@ -50,6 +50,7 @@ jobs:
         t: "${{ fromJSON(needs.job_prepare_matrix.outputs.mxtasks) }}"
     env:
       CLOUDIMG_TXZ: 'tmp.cloudimg.tar.xz'
+      GHCIU_STEPSUMM_RELEASE_TAG: 'auto-ci-release/${{ github.ref_name }}'
       UBB_RECIPE: "${{ matrix.t.ubborg_recipe }}"
       UBB_USECASE: "${{ matrix.t.ubborg_usecase }}"
       UBU_RLS: "${{ matrix.t.ubuntu_release }}"
@@ -123,7 +124,7 @@ jobs:
           prerelease: True
           removeArtifacts: True # Remove old files from release.
           commit: '${{ github.sha }}'
-          tag: 'auto-ci-release/${{ github.ref_name }}'
+          tag: '${{ env.GHCIU_STEPSUMM_RELEASE_TAG }}'
 
 
 
