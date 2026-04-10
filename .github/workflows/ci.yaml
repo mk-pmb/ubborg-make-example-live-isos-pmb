@@ -4,6 +4,8 @@
 # -*- coding: UTF-8, tab-width: 2 -*-
 ---
 
+name: '☂ CI tests'
+
 on:
   push:
     branches:
@@ -19,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       ##_DEFINE_SECTION_## basic_install_steps
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: mk-pmb/github-ci-util-2405-pmb/act/install@experimental
       - run: npm install .
       ##_END_SECTION_##
@@ -58,7 +60,7 @@ jobs:
 
     steps:
       ##_REPEAT_SECTION_## basic_install_steps
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: mk-pmb/github-ci-util-2405-pmb/act/install@experimental
       - run: npm install .
       ##_END_SECTION_##
