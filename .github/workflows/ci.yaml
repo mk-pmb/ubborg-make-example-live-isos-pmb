@@ -20,11 +20,10 @@ jobs:
   job_prepare_matrix:
     runs-on: ubuntu-latest
     steps:
-      ##_DEFINE_SECTION_## basic_install_steps
       - uses: actions/checkout@v6
-      - uses: mk-pmb/github-ci-util-2405-pmb/act/install@experimental
-      - run: npm install .
-      ##_END_SECTION_##
+      - name: 'Install ghciu'
+        uses: mk-pmb/github-ci-util-2405-pmb/act/install@experimental
+      - run: ghciu npm install .
 
       - name: 'Generate build matrix'
         id: mxgen
@@ -59,11 +58,16 @@ jobs:
       UBU_VER: "${{ matrix.t.ubuntu_version }}"
 
     steps:
-      ##_REPEAT_SECTION_## basic_install_steps
       - uses: actions/checkout@v6
-      - uses: mk-pmb/github-ci-util-2405-pmb/act/install@experimental
-      - run: npm install .
-      ##_END_SECTION_##
+      - name: 'Install ghciu'
+        uses: mk-pmb/github-ci-util-2405-pmb/act/install@experimental
+
+      - name: 'Use the experimental version of ubborg planner and playbookie'
+        run: >
+          ghciu npm install --save '${{ github.repository_owner
+            }}/ubborg-'{planner,playbookie}'-pmb-js#experimental'
+
+      - run: ghciu npm install .
 
       - name: 'Acquire recipe modules'
         run: >
