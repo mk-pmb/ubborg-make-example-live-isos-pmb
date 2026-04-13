@@ -166,8 +166,12 @@ function bake_bread__pack_squashfs () {
 
 
 function bake_bread__present_result_files () {
-  echo D: "These are your freshly baked ISO files:"
-  du --human-readable -- "$@" || return $?
+  local VAL="$(isosize --sectors -- "$1")"
+  VAL="${VAL#sector count: }"
+  VAL="${VAL/, sector size: / sectors × } bytes"
+  echo D: "Your freshly baked ISO file '$1' weighs $(stat -c %s -- "$1"
+    ) bytes ($VAL) ≈ $(du --apparent-size --human-readable -- "$1" |
+    grep -oPe '^\S+' | sed -re 's~[A-Z]*$~ &~')B."
 }
 
 
