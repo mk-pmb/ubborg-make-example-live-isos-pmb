@@ -126,6 +126,7 @@ function bake_bread__isoify () {
   vdo grub-mkrescue --output="$ISO_IMG" "$ISO_ROOT" || return $?
 
   vdo ${CFG[hook_isoify_done]} || return $?
+  sudo chown --reference . -- "$ISO_IMG" || return $?
   bake_bread__present_result_files "$ISO_IMG" || return $?
 }
 
@@ -166,7 +167,6 @@ function bake_bread__pack_squashfs () {
 
 function bake_bread__present_result_files () {
   echo D: "These are your freshly baked ISO files:"
-  sudo chown --reference . -- "$@" || return $?
   du --human-readable -- "$@" || return $?
 }
 
